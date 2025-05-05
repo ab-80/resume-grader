@@ -1,6 +1,7 @@
 using backend_api.Data;
 using backend_api.Services;
 using backend_api.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
