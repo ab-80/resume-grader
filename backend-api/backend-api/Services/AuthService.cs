@@ -38,5 +38,24 @@ namespace backend_api.Services
 
             return user;
         }
+
+        public async Task<User> LoginAsync(LoginDTO dto)
+        {
+            var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == dto.Email.ToLower());
+
+            if (user == null)
+                return null;
+
+            using var hmac = new HMACSHA512(user.PasswordSalt);
+            var computedHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(dto.Password));
+
+            for (int i = 0; i < computedHash.Length; i++)
+            {
+                if (computedHash[i] != user.PasswordHash[i])
+                    return null;
+            }
+
+            return user;
+        }
     }
 }

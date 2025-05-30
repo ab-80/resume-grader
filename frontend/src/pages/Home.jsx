@@ -9,7 +9,7 @@ function Home() {
                     <button>Go to Home</button>
                 </Link>
                 or
-                <Link to="/register">
+                <Link to="/Register">
                     <button>Sign up</button>
                 </Link>
             </nav>

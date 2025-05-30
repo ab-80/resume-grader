@@ -7,5 +7,6 @@ namespace backend_api.Services.Interfaces
     {
         Task<bool> UserExistsAsync(string email);
         Task<User> RegisterAsync(RegisterDTO dto);
+        Task<User> LoginAsync(LoginDTO dto);
     }
 }

@@ -24,6 +24,16 @@ namespace backend_api.Controllers
             var user = await _authService.RegisterAsync(dto);
             return Ok(new { user.Id, user.Email });
         }
-    }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(LoginDTO dto)
+        {
+            var user = await _authService.LoginAsync(dto);
+            
+            if (user == null)
+                return Unauthorized("Invalid email or password");
+
+            return Ok(new { user.Id, user.Email });
+        }
+    }
 }

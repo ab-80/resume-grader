@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../App';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -7,78 +8,118 @@ const Register = () => {
     password: '',
     confirmPassword: ''
   });
-
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
     if (formData.password !== formData.confirmPassword) {
-      setMessage('Passwords do not match');
+      setError('Passwords do not match');
+      setLoading(false);
       return;
     }
 
     try {
-      setLoading(true);
-      const response = await axios.post('http://localhost:7013/api/auth/register', {
-        email: formData.email,
-        password: formData.password
+      const response = await fetch('http://localhost:5218/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        }),
       });
 
-      setMessage('Registration successful!');
-      setFormData({ email: '', password: '', confirmPassword: '' });
-    } catch (error) {
-      console.error('Registration error:', error);
-      setMessage(error.response?.data?.message || 'Registration failed');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
+
+      // If registration is successful, automatically log the user in
+      login(data.token);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '2rem auto' }}>
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          name="email"
-          type="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-        />
-        <input
-          name="confirmPassword"
-          type="password"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          required
-          style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? 'Registering...' : 'Register'}
-        </button>
-      </form>
-      {message && <p style={{ marginTop: '10px' }}>{message}</p>}
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1 className="auth-title">Create Account</h1>
+        
+        {error && (
+          <div className="bg-red-50 text-red-500 p-3 rounded-md mb-4 text-sm">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            className="auth-input"
+            required
+          />
+          
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            className="auth-input"
+            required
+            minLength="6"
+          />
+          
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className="auth-input"
+            required
+            minLength="6"
+          />
+
+          <button
+            type="submit"
+            className="auth-button"
+            disabled={loading}
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
+          </button>
+        </form>
+
+        <p className="auth-text">
+          Already have an account?{' '}
+          <Link to="/login" className="auth-link">
+            Log in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 };
